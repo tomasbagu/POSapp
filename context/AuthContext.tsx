@@ -1,3 +1,4 @@
+//Contexto para la Autenticación
 import { User } from "@/interfaces/common";
 import { createContext } from "react";
 
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }: any) => {
     const updateRole = (role:  "client" | "chef" | "cashier") => {
         
     }
+
 
     return (
         <AuthContext.Provider value={{login, logout, register, updateUser, updateRole}}>
