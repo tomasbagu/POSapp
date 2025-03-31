@@ -3,12 +3,12 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyA19_tEPSuRCqB40l27aCL-RtoSVTSfgnw",
-    authDomain: "posapp-f777b.firebaseapp.com",
-    projectId: "posapp-f777b",
-    storageBucket: "posapp-f777b.firebasestorage.app",
-    messagingSenderId: "170836371535",
-    appId: "1:170836371535:web:bffb35f2e7d11e6c23223a"
+    apiKey: process.env.EXPO_PUBLIC_API_KEY,
+    authDomain:process.env.EXPO_PUBLIC_AUTH_DOMAIN,
+    projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
+    storageBucket: process.env.EXPO_PUBLIC_STORAGE_BUCKET,
+    messagingSenderId: process.env.EXPO_PUBLIC_MESSAGING_SENDER_ID,
+    appId: process.env.EXPO_PUBLIC_MESSAGING_SENDER_ID
   };
 
 export const app = initializeApp(firebaseConfig);
