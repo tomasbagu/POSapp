@@ -8,7 +8,7 @@ import {
     User as FirebaseUser 
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { auth, db } from "../utils/Firebase";  // Ajusta la ruta según tu estructura
+import { auth, db } from "../utils/Firebase"; 
 
 interface AuthContextInterface {
     currentUser: FirebaseUser | null;
