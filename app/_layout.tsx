@@ -1,11 +1,13 @@
-import { AuthProvider } from '@/context/AuthContext';
-import { Stack } from 'expo-router';
-import 'react-native-reanimated';
+import { Stack } from "expo-router";
+import { AuthProvider } from "../context/AuthContext";
+import { DataProvider } from "../context/DataContext";  // Importación agregada
 
-export default function RootLayout() {
-  return (
-    <AuthProvider>
-      <Stack>
-      </Stack>
-    </AuthProvider>);
+export default function Layout() {
+    return (
+        <AuthProvider>
+            <DataProvider>  
+                <Stack screenOptions={{ headerShown: false }} />
+            </DataProvider>
+        </AuthProvider>
+    );
 }
