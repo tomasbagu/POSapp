@@ -4,8 +4,7 @@ import 'react-native-reanimated';
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <Stack>
-      </Stack>
+    <AuthProvider>      
+      <Stack screenOptions={{ headerShown: false }} />
     </AuthProvider>);
 }
