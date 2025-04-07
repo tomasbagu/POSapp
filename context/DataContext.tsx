@@ -1,15 +1,10 @@
-import { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
-import { db } from "../utils/Firebase";
+import { db, storage } from "../utils/Firebase";
 import * as ImagePicker from "expo-image-picker";
-import { createClient } from "@supabase/supabase-js";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "";
-
-// Inicializar Supabase
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+// Actualiza la interfaz para incluir imagePath (opcional)
 interface Dish {
     id?: string;
     name: string;
@@ -17,6 +12,7 @@ interface Dish {
     description: string;
     category: "entrada" | "fuerte" | "postre" | "bebida";
     imageUrl?: string;
+    imagePath?: string; // se usará para eliminar la imagen de Storage
 }
 
 interface DataContextInterface {
@@ -25,7 +21,8 @@ interface DataContextInterface {
     updateDish: (id: string, updatedDish: Partial<Dish>) => Promise<boolean>;
     deleteDish: (id: string) => Promise<boolean>;
     getDishes: () => Promise<void>;
-    selectImage: () => Promise<string | null>;
+    // Ahora selectImage devuelve un objeto con imageUrl e imagePath
+    selectImage: () => Promise<{ imageUrl: string; imagePath: string } | null>;
 }
 
 export const DataContext = createContext<DataContextInterface>({
@@ -83,9 +80,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    // Eliminar un plato
+    // Eliminar un plato y su imagen (si existe)
     const deleteDish = async (id: string): Promise<boolean> => {
         try {
+            // Buscar el plato para obtener el imagePath
+            const dishToDelete = dishes.find(d => d.id === id);
+            if (dishToDelete) {
+                // Si existe imagePath, eliminar la imagen de Storage
+                if (dishToDelete.imagePath) {
+                    const imageRef = ref(storage, dishToDelete.imagePath);
+                    await deleteObject(imageRef);
+                }
+            }
             await deleteDoc(doc(db, "dishes", id));
             setDishes(prevDishes => prevDishes.filter(d => d.id !== id));
             return true;
@@ -95,8 +101,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    // Seleccionar imagen y subirla a Supabase
-    const selectImage = async (): Promise<string | null> => {
+    // Seleccionar imagen y subirla a Firebase Storage
+    const selectImage = async (): Promise<{ imageUrl: string; imagePath: string } | null> => {
         try {
             const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (permissionResult.status !== "granted") {
@@ -114,25 +120,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (result.canceled) return null;
 
             const imageUri = result.assets[0].uri;
+            // Generar un nombre único para la imagen
             const fileName = `dishes/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
 
-            // Convertir la URI en un Blob antes de subirla a Supabase
+            // Convertir la URI en un Blob
             const response = await fetch(imageUri);
             const blob = await response.blob();
 
-            // Subir imagen a Supabase
-            const { data, error } = await supabase.storage.from("images").upload(fileName, blob, {
-                contentType: "image/jpeg",
-            });
+            // Subir la imagen a Firebase Storage
+            const imageRef = ref(storage, fileName);
+            await uploadBytes(imageRef, blob);
+            const imageUrl = await getDownloadURL(imageRef);
 
-            if (error) {
-                console.error("Error al subir la imagen:", error);
-                return null;
-            }
-
-            // Obtener la URL pública de la imagen
-            const { data: publicUrlData } = supabase.storage.from("images").getPublicUrl(fileName);
-            return publicUrlData.publicUrl;
+            return { imageUrl, imagePath: fileName };
         } catch (error) {
             console.error("Error al seleccionar o subir imagen:", error);
             return null;
