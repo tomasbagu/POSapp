@@ -39,7 +39,7 @@ interface OrderContextInterface {
   removeFromCart: (dishId: string) => void;
   updateQuantity: (dishId: string, quantity: number) => void;
   clearCart: () => void;
-  sendOrder: () => Promise<void>;
+  sendOrder: () => Promise<string | null>;
   getOrderStatus: (orderId: string) => void;
 }
 
@@ -50,7 +50,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [cart, setCart] = useState<CartItem[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
 
-  // Obtener platos de Firebase al montar el componente
   useEffect(() => {
     const fetchDishes = async () => {
       const snapshot = await getDocs(collection(db, "dishes"));
@@ -91,8 +90,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCart([]);
   };
 
-  const sendOrder = async () => {
-    if (cart.length === 0) return;
+  const sendOrder = async (): Promise<string | null> => {
+    if (cart.length === 0) return null;
     const newOrder: Order = {
       items: cart,
       status: "Ordered",
@@ -102,6 +101,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const docRef = await addDoc(collection(db, "orders"), newOrder);
     setOrder({ ...newOrder, id: docRef.id });
     clearCart();
+    return docRef.id;
   };
 
   const getOrderStatus = (orderId: string) => {
@@ -133,7 +133,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-// Exportamos un hook para acceder fácilmente al contexto
 export const useOrder = () => {
   const context = useContext(OrderContext);
   if (!context) throw new Error("useOrder must be used within an OrderProvider");

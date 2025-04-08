@@ -6,22 +6,31 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useOrder } from "@/context/OrderContext"; // Ajusta la ruta
 import { useRouter } from "expo-router";
 
 const Cart = () => {
   const router = useRouter();
-  const { cart, updateQuantity, removeFromCart } = useOrder();
+  const { cart, updateQuantity, removeFromCart, sendOrder } = useOrder();
 
-  // Calcular el total
+  // Calcular el total del carrito
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-  // Renderizar cada item del carrito
-  const renderCartItem = ({ item }: any) => {
+  // Función para procesar la orden
+  const handleOrderNow = async () => {
+    const orderId = await sendOrder();
+    if (orderId) {
+      Alert.alert("Orden creada con éxito", `ID de la orden: ${orderId}`);
+      router.push("/(app)/Client/homeClient"); // Redirige al menú; ajusta la ruta según tu configuración.
+    }
+  };
+
+  // Render de cada item en el carrito
+  const renderCartItem = ({ item }: { item: any }) => {
     return (
       <View style={styles.card}>
-        {/* Sección izquierda */}
         <View style={styles.leftSection}>
           <Text style={styles.dishName}>{item.name}</Text>
           <View style={styles.categoryBadge}>
@@ -33,14 +42,12 @@ const Cart = () => {
           </Text>
         </View>
 
-        {/* Imagen */}
         {item.imageUrl ? (
           <Image source={{ uri: item.imageUrl }} style={styles.dishImage} />
         ) : (
           <View style={styles.dishImagePlaceholder} />
         )}
 
-        {/* Botones (+/-) */}
         <View style={styles.quantityContainer}>
           <TouchableOpacity
             style={styles.quantityButton}
@@ -59,7 +66,6 @@ const Cart = () => {
     );
   };
 
-  // Si el carrito está vacío
   if (cart.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -80,7 +86,7 @@ const Cart = () => {
       {/* Título */}
       <Text style={styles.title}>My 🛒 Cart List</Text>
 
-      {/* Lista de items */}
+      {/* Lista de items del carrito */}
       <FlatList
         data={cart}
         keyExtractor={(item) => item.id}
@@ -88,10 +94,10 @@ const Cart = () => {
         contentContainerStyle={{ paddingBottom: 20 }}
       />
 
-      {/* Total y botón Order Now */}
+      {/* Total del carrito y botón Order Now */}
       <View style={styles.bottomContainer}>
         <Text style={styles.totalText}>Total: ${total.toFixed(2)}</Text>
-        <TouchableOpacity style={styles.orderButton}>
+        <TouchableOpacity style={styles.orderButton} onPress={handleOrderNow}>
           <Text style={styles.orderButtonText}>Order Now</Text>
         </TouchableOpacity>
       </View>
@@ -148,8 +154,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     flexDirection: "row",
     alignItems: "center",
-
-    // Sombra
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
