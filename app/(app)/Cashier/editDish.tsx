@@ -7,7 +7,9 @@ import {
   Image,
   Alert,
   StyleSheet,
+  ScrollView,
 } from "react-native";
+import Modal from "react-native-modal";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { DataContext } from "../../../context/DataContext";
 
@@ -23,8 +25,6 @@ const EditDish = () => {
 
   const existingDish = dishes?.find((d) => d.id === params.id) || null;
 
-  // Mapear tus categorías a textos más descriptivos (opcional)
-  // Ajusta según tu preferencia o tu BD
   const categories: ("entrada" | "fuerte" | "postre" | "bebida")[] = [
     "entrada",
     "fuerte",
@@ -45,6 +45,7 @@ const EditDish = () => {
     useState<"entrada" | "fuerte" | "postre" | "bebida">("entrada");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false); // ← NUEVO
 
   useEffect(() => {
     if (existingDish) {
@@ -57,7 +58,6 @@ const EditDish = () => {
     }
   }, [existingDish]);
 
-  // Función para seleccionar imagen y subirla a Firebase Storage
   const pickImage = async () => {
     const newImage = await selectImage();
     if (newImage) {
@@ -87,7 +87,14 @@ const EditDish = () => {
       } else {
         await addDish(dishData);
       }
-      router.back();
+
+      // ← MOSTRAR MODAL
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.back();
+      }, 2000);
+
     } catch (error) {
       console.error("Error al guardar el plato:", error);
       Alert.alert("Error", "No se pudo guardar el plato.");
@@ -96,94 +103,95 @@ const EditDish = () => {
 
   return (
     <View style={styles.container}>
-      {/* Título principal y subtítulo */}
       <Text style={styles.title}>Add Dish</Text>
       <Text style={styles.subtitle}>to your menu</Text>
 
-      {/* Nombre del plato */}
-      <Text style={styles.label}>Name of your dish</Text>
-      <TextInput
-        placeholder="Name of your dish"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-      />
-
-      {/* Precio */}
-      <Text style={styles.label}>Price</Text>
-      {/* Contenedor para el símbolo $ + input */}
-      <View style={styles.priceContainer}>
-        <Text style={styles.priceSymbol}>$</Text>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.form}>
+        <Text style={styles.label}>Name of your dish</Text>
         <TextInput
-          placeholder="0"
-          value={price}
-          onChangeText={setPrice}
-          keyboardType="numeric"
-          style={[styles.input, styles.priceInput]}
+          placeholder="Name of your dish"
+          value={name}
+          onChangeText={setName}
+          style={styles.input}
         />
-      </View>
 
-      {/* Descripción */}
-      <Text style={styles.label}>Description</Text>
-      <TextInput
-        placeholder="Description"
-        value={description}
-        onChangeText={setDescription}
-        style={styles.input}
-      />
+        <Text style={styles.label}>Price</Text>
+        <View style={styles.priceContainer}>
+          <Text style={styles.priceSymbol}>$</Text>
+          <TextInput
+            placeholder="0"
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+            style={[styles.input, styles.priceInput]}
+          />
+        </View>
 
-      {/* Categoría (Role) */}
-      <Text style={styles.label}>Role</Text>
-      {categories.map((cat) => {
-        const isSelected = category === cat;
-        return (
-          <TouchableOpacity
-            key={cat}
-            onPress={() => setCategory(cat)}
-            style={[
-              styles.roleOption,
-              isSelected && styles.roleOptionSelected,
-            ]}
-          >
-            <Text
+        <Text style={styles.label}>Description</Text>
+        <TextInput
+          placeholder="Description"
+          value={description}
+          onChangeText={setDescription}
+          style={styles.input}
+        />
+
+        <Text style={styles.label}>Role</Text>
+        {categories.map((cat) => {
+          const isSelected = category === cat;
+          return (
+            <TouchableOpacity
+              key={cat}
+              onPress={() => setCategory(cat)}
               style={[
-                styles.roleOptionText,
-                isSelected && styles.roleOptionTextSelected,
+                styles.roleOption,
+                isSelected && styles.roleOptionSelected,
               ]}
             >
-              {categoryLabels[cat]}
-            </Text>
+              <Text
+                style={[
+                  styles.roleOptionText,
+                  isSelected && styles.roleOptionTextSelected,
+                ]}
+              >
+                {categoryLabels[cat]}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+
+        <Text style={styles.label}>Role</Text>
+        <View style={styles.iconRow}>
+          <TouchableOpacity onPress={pickImage} style={styles.iconButton}>
+            <Text style={styles.iconText}>📷</Text>
           </TouchableOpacity>
-        );
-      })}
+          <TouchableOpacity
+            onPress={() => Alert.alert("Add something else here!")}
+            style={styles.iconButton}
+          >
+            <Text style={styles.iconText}>+</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Segunda fila para la cámara y el botón + */}
-      <Text style={styles.label}>Role</Text>
-      <View style={styles.iconRow}>
-        <TouchableOpacity onPress={pickImage} style={styles.iconButton}>
-          <Text style={styles.iconText}>📷</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => Alert.alert("Add something else here!")}
-          style={styles.iconButton}
-        >
-          <Text style={styles.iconText}>+</Text>
-        </TouchableOpacity>
-      </View>
+        {imageUrl && (
+          <Image
+            source={{ uri: imageUrl }}
+            style={styles.previewImage}
+            resizeMode="cover"
+          />
+        )}
+      </ScrollView>
 
-      {/* Vista previa de la imagen si se selecciona */}
-      {imageUrl && (
-        <Image
-          source={{ uri: imageUrl }}
-          style={styles.previewImage}
-          resizeMode="cover"
-        />
-      )}
-
-      {/* Botón para guardar/agregar plato */}
       <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
         <Text style={styles.addButtonText}>Add dish</Text>
       </TouchableOpacity>
+
+      {/* MODAL DE ÉXITO */}
+      <Modal isVisible={showSuccess} animationIn="bounceIn" animationOut="bounceOut" backdropOpacity={0.5}>
+        <View style={styles.modalContent}>
+          <Text style={styles.successIcon}>✅</Text>
+          <Text style={styles.successText}>Dish created!</Text>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -194,25 +202,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingTop: 60,
     paddingHorizontal: 20,
-    paddingTop: 40, // Ajusta según tu preferencia
+  },
+  scroll: {
+    flex: 1,
+  },
+  form: {
+    paddingBottom: 30,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "bold",
-    marginBottom: 0,
     color: "#000",
+    fontFamily: "Inter-Regular",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 26,
     color: "#000",
-    marginBottom: 20,
+    marginBottom: 30,
+    fontFamily: "Inter-Regular",
   },
   label: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "600",
     color: "#000",
     marginBottom: 8,
+    fontFamily: "Inter-Regular",
   },
   input: {
     borderWidth: 1,
@@ -221,6 +237,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
     fontSize: 14,
+    fontFamily: "Inter-Regular",
   },
   priceContainer: {
     flexDirection: "row",
@@ -232,6 +249,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginRight: 8,
     color: "#000",
+    fontFamily: "Inter-Regular",
   },
   priceInput: {
     flex: 1,
@@ -253,6 +271,7 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 14,
     fontWeight: "500",
+    fontFamily: "Inter-Regular",
   },
   roleOptionTextSelected: {
     color: "#fff",
@@ -273,6 +292,7 @@ const styles = StyleSheet.create({
   },
   iconText: {
     fontSize: 20,
+    fontFamily: "Inter-Regular",
   },
   previewImage: {
     width: 100,
@@ -286,10 +306,29 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     marginTop: 10,
+    marginBottom: 20,
   },
   addButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+    fontFamily: "Inter-Regular",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 30,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  successIcon: {
+    fontSize: 50,
+    marginBottom: 10,
+  },
+  successText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+    fontFamily: "Inter-Regular",
   },
 });
