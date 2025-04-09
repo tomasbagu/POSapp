@@ -23,10 +23,12 @@ const Cart = () => {
     const orderId = await sendOrder();
     if (orderId) {
       Alert.alert("Orden creada con éxito", `ID de la orden: ${orderId}`);
-      router.push("/(app)/Client/homeClient"); // Redirige al menú; ajusta la ruta según tu configuración.
+      router.push({ pathname: "/(app)/Client/order-status", params: { id: orderId } });
+
     }
   };
 
+ 
   // Render de cada item en el carrito
   const renderCartItem = ({ item }: { item: any }) => {
     return (
@@ -69,7 +71,7 @@ const Cart = () => {
   if (cart.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTitle}>My 🛒 Cart List</Text>
+        <Text style={styles.emptyTitle}>My Cart List</Text>
         <Text style={styles.emptyText}>Your cart is empty</Text>
         <TouchableOpacity
           style={styles.goBackButton}
@@ -84,7 +86,7 @@ const Cart = () => {
   return (
     <View style={styles.container}>
       {/* Título */}
-      <Text style={styles.title}>My 🛒 Cart List</Text>
+      <Text style={styles.title}>My Cart List</Text>
 
       {/* Lista de items del carrito */}
       <FlatList

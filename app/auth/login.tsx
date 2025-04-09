@@ -45,13 +45,13 @@ export default function LoginScreen() {
 
       switch (userData.role) {
         case "client":
-          router.replace("/(app)/Client/homeClient");
+          router.replace("/(app)/Client/clientMenu");
           break;
         case "chef":
           router.replace("/(app)/Chef/homeChef");
           break;
         case "cashier":
-          router.replace("/(app)/Cashier/homeCash");
+          router.replace("/(app)/Cashier/cashierMenu");
           break;
         default:
           Alert.alert("Error", "Rol no válido");

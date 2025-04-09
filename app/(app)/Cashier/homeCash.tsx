@@ -109,7 +109,7 @@ const HomeCash = () => {
         >
           <Text style={styles.buttonText}>+ Add new dish</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.readyButton}>
+        <TouchableOpacity style={styles.readyButton} onPress={() => router.replace("../Cashier/cashierMenu")}>
           <Text style={styles.buttonText}>My Menu is Ready!</Text>
         </TouchableOpacity>
       </View>

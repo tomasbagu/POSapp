@@ -7,6 +7,9 @@ import {
   updateDoc,
   onSnapshot,
   getDocs,
+  query,
+  where,
+  orderBy,
 } from "firebase/firestore";
 
 interface Dish {
@@ -27,9 +30,10 @@ interface Order {
   items: CartItem[];
   status: OrderStatus;
   createdAt: number;
+  timestamps?: Record<string, number>;
 }
 
-type OrderStatus = "Ordered" | "Cooking" | "Ready for Pickup" | "Delivered" | "Ready for Payment";
+type OrderStatus = "Ordered" | "Cooking" | "Ready for Pickup" | "Delivered" | "Ready for Payment" | "Done";
 
 interface OrderContextInterface {
   dishes: Dish[];
@@ -41,6 +45,12 @@ interface OrderContextInterface {
   clearCart: () => void;
   sendOrder: () => Promise<string | null>;
   getOrderStatus: (orderId: string) => void;
+  updateOrderStatus: (orderId: string, newStatus: string) => Promise<void>;
+  fetchOrderedOrders: () => void;
+  orderedOrders: Order[];
+  allOrders: Order[];
+  fetchAllOrders: () => () => void;
+
 }
 
 export const OrderContext = createContext<OrderContextInterface | null>(null);
@@ -49,6 +59,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
+  const [orderedOrders, setOrderedOrders] = useState<Order[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     const fetchDishes = async () => {
@@ -114,6 +126,46 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const fetchAllOrders = () => {
+    const q = query(collection(db, "orders"), orderBy("createdAt", "asc"));
+    return onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Order[];
+      setAllOrders(data);
+    });
+  };
+  
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const orderRef = doc(db, "orders", orderId);
+    const timestampField = `timestamps.${newStatus}`;
+
+    await updateDoc(orderRef, {
+      status: newStatus,
+      [timestampField]: Date.now(),
+    });
+  };
+
+  const fetchOrderedOrders = () => {
+    const q = query(
+      collection(db, "orders"),
+      where("status", "==", "Ordered"),
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Order[];
+      setOrderedOrders(data);
+    });
+
+    
+    
+  };
+
   return (
     <OrderContext.Provider
       value={{
@@ -126,6 +178,11 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         clearCart,
         sendOrder,
         getOrderStatus,
+        updateOrderStatus,
+        fetchOrderedOrders,
+        orderedOrders,
+        allOrders,
+        fetchAllOrders
       }}
     >
       {children}
