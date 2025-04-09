@@ -11,36 +11,64 @@ import {
 import { useOrder } from "@/context/OrderContext";
 
 const STATUS_OPTIONS = [
-  "Ordered", "Cooking", "Ready for Pickup", "Delivered", "Ready for Payment", "Done"
+  "Ordered",
+  "Cooking",
+  "Ready for Pickup",
+  "Delivered",
+  "Ready for Payment",
+  "Done",
 ];
 
 const ChefDashboard = () => {
   const { allOrders, fetchAllOrders, updateOrderStatus } = useOrder();
   const [initialLoading, setInitialLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("Ordered");
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     const unsubscribe = fetchAllOrders();
     const timer = setTimeout(() => setInitialLoading(false), 2000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => {
       unsubscribe();
       clearTimeout(timer);
+      clearInterval(interval);
     };
   }, []);
 
-  const filteredOrders = allOrders.filter((order) => order.status === statusFilter);
+  const filteredOrders = allOrders.filter(
+    (order) => order.status === statusFilter
+  );
 
   const renderOrder = ({ item }: { item: any }) => {
     const isNew = !item.timestamps || !item.timestamps["Cooking"];
+    const diff = now - item.createdAt;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    let timeText = "";
+    if (days > 0) {
+      timeText = `🕒 Hace ${days} día${days > 1 ? "s" : ""}`;
+    } else if (hours > 0) {
+      timeText = `🕒 Hace ${hours} hora${hours > 1 ? "s" : ""}`;
+    } else if (minutes > 0) {
+      timeText = `🕒 Hace ${minutes} min`;
+    } else {
+      timeText = `🕒 Hace ${seconds} seg`;
+    }
 
     return (
       <View style={styles.card}>
         <View style={styles.headerRow}>
-          <Text style={styles.orderId}>Orden #{item.id.slice(0, 6).toUpperCase()}</Text>
+          <Text style={styles.orderId}>
+            Orden #{item.id.slice(0, 6).toUpperCase()}
+          </Text>
           {isNew && <Text style={styles.newBadge}>🔴 Nueva</Text>}
         </View>
 
-        <Text style={styles.time}>🕒 {new Date(item.createdAt).toLocaleTimeString()}</Text>
+        <Text style={styles.time}>{timeText} </Text>
 
         <Text style={styles.sectionTitle}>Pedidos:</Text>
         {item.items.map((dish: any, idx: number) => (
@@ -56,21 +84,28 @@ const ChefDashboard = () => {
             style={styles.button}
             onPress={() => updateOrderStatus(item.id, "Cooking")}
           >
-            <Text style={styles.buttonText}>Iniciar (Cooking)</Text>
+            <Text style={styles.buttonText}>Cooking</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => updateOrderStatus(item.id, "Done")}
+            onPress={() => updateOrderStatus(item.id, "Delivered")}
           >
-            <Text style={styles.buttonText}>Marcar como Done</Text>
+            <Text style={styles.buttonText}>Delivered</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.button}
             onPress={() => updateOrderStatus(item.id, "Ready for Pickup")}
           >
-            <Text style={styles.buttonText}>Listo para Recoger</Text>
+            <Text style={styles.buttonText}>Ready for Pickup</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => updateOrderStatus(item.id, "Ready for Payment")}
+          >
+            <Text style={styles.buttonText}>Ready for Payment</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -88,13 +123,20 @@ const ChefDashboard = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📋 Órdenes por Estado</Text>
+      <Text style={styles.title}>Órdenes por Estado</Text>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterRow}
+      >
         {STATUS_OPTIONS.map((status) => (
           <TouchableOpacity
             key={status}
-            style={[styles.filterButton, statusFilter === status && styles.filterButtonActive]}
+            style={[
+              styles.filterButton,
+              statusFilter === status && styles.filterButtonActive,
+            ]}
             onPress={() => setStatusFilter(status)}
           >
             <Text
@@ -156,6 +198,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     marginBottom: 10,
     elevation: 2,
+    height: 40,
   },
   filterButtonActive: {
     backgroundColor: "#000",

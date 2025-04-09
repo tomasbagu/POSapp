@@ -18,7 +18,7 @@ const OrderStatusScreen = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#000" />
-        <Text style={styles.loadingText}>Cargando estado de la orden...</Text>
+        <Text style={styles.loadingText}>Charging your order...</Text>
       </View>
     );
   }

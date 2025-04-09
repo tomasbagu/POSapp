@@ -11,6 +11,9 @@ import {
   where,
   orderBy,
 } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+
+
 
 interface Dish {
   id: string;
@@ -33,6 +36,7 @@ interface Order {
   // Nuevo campo para asociar el pedido a una mesa
   tableNumber?: string;
   timestamps?: Record<string, number>;
+  userEmail?: string;
 }
 
 type OrderStatus =
@@ -113,8 +117,15 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCart([]);
   };
 
+
+
+
   const sendOrder = async (): Promise<string | null> => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+  
     if (cart.length === 0) return null;
+  
     const newOrder: Order = {
       items: cart,
       status: "Ordered",
@@ -132,7 +143,17 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.error("Error al enviar la orden:", error);
       return null;
     }
+=======
+      userEmail: user?.email ?? "desconocido",
+    };
+  
+    const docRef = await addDoc(collection(db, "orders"), newOrder);
+    setOrder({ ...newOrder, id: docRef.id });
+    clearCart();
+    return docRef.id;
+>>>>>>> 89b482de3c805fccf2c93d5d89e3d193e9eb9f6c
   };
+  
 
   const getOrderStatus = (orderId: string) => {
     const orderRef = doc(db, "orders", orderId);
