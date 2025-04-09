@@ -30,15 +30,25 @@ interface Order {
   items: CartItem[];
   status: OrderStatus;
   createdAt: number;
+  // Nuevo campo para asociar el pedido a una mesa
+  tableNumber?: string;
   timestamps?: Record<string, number>;
 }
 
-type OrderStatus = "Ordered" | "Cooking" | "Ready for Pickup" | "Delivered" | "Ready for Payment" | "Done";
+type OrderStatus =
+  | "Ordered"
+  | "Cooking"
+  | "Ready for Pickup"
+  | "Delivered"
+  | "Ready for Payment"
+  | "Done";
 
 interface OrderContextInterface {
   dishes: Dish[];
   cart: CartItem[];
   order: Order | null;
+  tableNumber: string;
+  setTableNumber: (table: string) => void;
   addToCart: (dish: Dish) => void;
   removeFromCart: (dishId: string) => void;
   updateQuantity: (dishId: string, quantity: number) => void;
@@ -50,7 +60,6 @@ interface OrderContextInterface {
   orderedOrders: Order[];
   allOrders: Order[];
   fetchAllOrders: () => () => void;
-
 }
 
 export const OrderContext = createContext<OrderContextInterface | null>(null);
@@ -61,6 +70,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [order, setOrder] = useState<Order | null>(null);
   const [orderedOrders, setOrderedOrders] = useState<Order[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
+  // Nuevo estado para guardar el número de mesa
+  const [tableNumber, setTableNumber] = useState<string>("");
 
   useEffect(() => {
     const fetchDishes = async () => {
@@ -108,12 +119,19 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       items: cart,
       status: "Ordered",
       createdAt: Date.now(),
+      // Se incluye el número de mesa leído
+      tableNumber,
     };
 
-    const docRef = await addDoc(collection(db, "orders"), newOrder);
-    setOrder({ ...newOrder, id: docRef.id });
-    clearCart();
-    return docRef.id;
+    try {
+      const docRef = await addDoc(collection(db, "orders"), newOrder);
+      setOrder({ ...newOrder, id: docRef.id });
+      clearCart();
+      return docRef.id;
+    } catch (error) {
+      console.error("Error al enviar la orden:", error);
+      return null;
+    }
   };
 
   const getOrderStatus = (orderId: string) => {
@@ -136,7 +154,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setAllOrders(data);
     });
   };
-  
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     const orderRef = doc(db, "orders", orderId);
@@ -149,11 +166,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const fetchOrderedOrders = () => {
-    const q = query(
-      collection(db, "orders"),
-      where("status", "==", "Ordered"),
-    );
-
+    const q = query(collection(db, "orders"), where("status", "==", "Ordered"));
     return onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -161,9 +174,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       })) as Order[];
       setOrderedOrders(data);
     });
-
-    
-    
   };
 
   return (
@@ -172,6 +182,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         dishes,
         cart,
         order,
+        tableNumber,
+        setTableNumber,
         addToCart,
         removeFromCart,
         updateQuantity,
@@ -182,7 +194,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         fetchOrderedOrders,
         orderedOrders,
         allOrders,
-        fetchAllOrders
+        fetchAllOrders,
       }}
     >
       {children}

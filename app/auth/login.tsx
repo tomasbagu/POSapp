@@ -45,7 +45,7 @@ export default function LoginScreen() {
 
       switch (userData.role) {
         case "client":
-          router.replace("/(app)/Client/clientMenu");
+          router.replace("/(app)/Client/ScannScreen");
           break;
         case "chef":
           router.replace("/(app)/Chef/homeChef");
