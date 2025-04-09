@@ -11,6 +11,9 @@ import {
   where,
   orderBy,
 } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+
+
 
 interface Dish {
   id: string;
@@ -31,6 +34,7 @@ interface Order {
   status: OrderStatus;
   createdAt: number;
   timestamps?: Record<string, number>;
+  userEmail?: string;
 }
 
 type OrderStatus = "Ordered" | "Cooking" | "Ready for Pickup" | "Delivered" | "Ready for Payment" | "Done";
@@ -102,19 +106,28 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCart([]);
   };
 
+
+
+
   const sendOrder = async (): Promise<string | null> => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+  
     if (cart.length === 0) return null;
+  
     const newOrder: Order = {
       items: cart,
       status: "Ordered",
       createdAt: Date.now(),
+      userEmail: user?.email ?? "desconocido",
     };
-
+  
     const docRef = await addDoc(collection(db, "orders"), newOrder);
     setOrder({ ...newOrder, id: docRef.id });
     clearCart();
     return docRef.id;
   };
+  
 
   const getOrderStatus = (orderId: string) => {
     const orderRef = doc(db, "orders", orderId);

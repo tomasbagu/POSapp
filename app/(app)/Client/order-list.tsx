@@ -1,19 +1,35 @@
 import React, { useEffect } from "react";
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useOrder } from "@/context/OrderContext";
+import { getAuth } from "firebase/auth";
+import { useRouter } from "expo-router";
+
 
 const ClientOrderList = () => {
-  const { orderedOrders, fetchOrderedOrders } = useOrder();
+  const { allOrders, fetchAllOrders } = useOrder();
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = fetchOrderedOrders();
-    return () => unsubscribe;
+    const unsubscribe = fetchAllOrders();
+    return () => unsubscribe();
   }, []);
 
-  if (!orderedOrders.length) {
+  if (!user) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.title}>No tienes órdenes activas</Text>
+        <Text style={{ fontSize: 16 }}>No has iniciado sesión</Text>
+      </View>
+    );
+  }
+
+  const userOrders = allOrders.filter((order) => order.userEmail === user.email);
+
+  if (!userOrders.length) {
+    return (
+      <View style={styles.centered}>
+        <Text style={{ fontSize: 16 }}>No tienes órdenes registradas</Text>
       </View>
     );
   }
@@ -22,14 +38,17 @@ const ClientOrderList = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Mis Órdenes</Text>
       <FlatList
-        data={orderedOrders}
+        data={userOrders}
         keyExtractor={(item) => item.id ?? String(item.createdAt)}
         renderItem={({ item }) => (
+          <TouchableOpacity  onPress={() => router.push({ pathname: "/(app)/Client/order-status", params: { id: item.id } })}
+>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Orden #{item.id}</Text>
+            <Text style={styles.cardTitle}>Orden #{item.id?.slice(0, 6).toUpperCase()}</Text>
             <Text style={styles.cardStatus}>Estado: {item.status}</Text>
             <Text style={styles.cardTime}>🕒 {new Date(item.createdAt).toLocaleString()}</Text>
           </View>
+          </TouchableOpacity>
         )}
       />
     </View>
