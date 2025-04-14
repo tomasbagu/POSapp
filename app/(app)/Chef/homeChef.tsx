@@ -65,19 +65,19 @@ const ChefDashboard = () => {
           <Text style={styles.orderId}>
             Orden #{item.id.slice(0, 6).toUpperCase()}
           </Text>
-          {isNew && <Text style={styles.newBadge}>🔴 Nueva</Text>}
+          {isNew && <Text style={styles.newBadge}>🔴 New</Text>}
         </View>
 
         <Text style={styles.time}>{timeText} </Text>
 
-        <Text style={styles.sectionTitle}>Pedidos:</Text>
+        <Text style={styles.sectionTitle}>Orders:</Text>
         {item.items.map((dish: any, idx: number) => (
           <Text key={idx} style={styles.dish}>
             - {dish.name} x {dish.quantity}
           </Text>
         ))}
 
-        <Text style={styles.status}>Estado actual: {item.status}</Text>
+        <Text style={styles.status}>Current Status: {item.status}</Text>
 
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
@@ -116,14 +116,14 @@ const ChefDashboard = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#000" />
-        <Text style={{ marginTop: 10 }}>Cargando órdenes...</Text>
+        <Text style={{ marginTop: 10 }}>Loading orders...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Órdenes por Estado</Text>
+      <Text style={styles.title}>Orders by Status</Text>
 
       <ScrollView
         horizontal
@@ -152,7 +152,7 @@ const ChefDashboard = () => {
       </ScrollView>
 
       {filteredOrders.length === 0 ? (
-        <Text style={styles.noOrders}>No hay órdenes en este estado.</Text>
+        <Text style={styles.noOrders}>There are no orders in this status.</Text>
       ) : (
         <FlatList
           data={filteredOrders}

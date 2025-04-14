@@ -130,29 +130,18 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       items: cart,
       status: "Ordered",
       createdAt: Date.now(),
-      // Se incluye el número de mesa leído
+      userEmail: user?.email ?? "desconocido",
       tableNumber,
     };
 
-    try {
-      const docRef = await addDoc(collection(db, "orders"), newOrder);
-      setOrder({ ...newOrder, id: docRef.id });
-      clearCart();
-      return docRef.id;
-    } catch (error) {
-      console.error("Error al enviar la orden:", error);
-      return null;
-    }
-=======
-      userEmail: user?.email ?? "desconocido",
-    };
   
     const docRef = await addDoc(collection(db, "orders"), newOrder);
     setOrder({ ...newOrder, id: docRef.id });
     clearCart();
     return docRef.id;
->>>>>>> 89b482de3c805fccf2c93d5d89e3d193e9eb9f6c
   };
+  
+   
   
 
   const getOrderStatus = (orderId: string) => {
