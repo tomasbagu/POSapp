@@ -1,4 +1,4 @@
-# 📲 POSApp
+# 📲 POSApp- Tomas Barrios, Gabriela Bejarano
 
 POSApp es una aplicación de sistema de punto de venta (POS) desarrollada en React Native con Expo Router. Está diseñada para gestionar pedidos en restaurantes de manera eficiente, integrando funcionalidades como escaneo de códigos, estados de orden en tiempo real, gestión de platos, autenticación y sincronización de datos con Firebase y Supabase.
 
