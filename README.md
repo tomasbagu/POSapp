@@ -9,7 +9,6 @@ POSApp es una aplicación de sistema de punto de venta (POS) desarrollada en Rea
 - 🖼️ Interfaz dinámica y responsiva con React Native Paper.
 - 🔍 Escaneo de códigos de barras usando `expo-camera`.
 - 🔐 Autenticación y Firestore en tiempo real (`@react-native-firebase/firestore`).
-- ☁️ Integración con Supabase para otras funcionalidades.
 - 🌐 Navegación moderna usando `expo-router`.
 - 📦 Manejador de entorno `.env` y soporte para `dotenv`.
 
@@ -19,9 +18,8 @@ POSApp es una aplicación de sistema de punto de venta (POS) desarrollada en Rea
 - **Expo SDK 52**
 - **Typescript**
 - **Firebase / Firestore**
-- **Supabase**
 - **React Navigation**
 - **React Native Paper**
 - **Expo Camera**
-- **Jest para testing**
+
 
